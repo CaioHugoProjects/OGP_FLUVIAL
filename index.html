@@ -64,7 +64,7 @@
     <div id="mainApp" class="hidden flex-col h-full w-full">
         
         <!-- Cabeçalho Global (Fixo no topo para todos os usuários) -->
-        <header class="bg-slate-900 text-white p-4 shadow-md flex justify-between items-center shrink-0 z-40">
+        <header class="bg-slate-900 text-white p-4 shadow-md flex justify-between items-center shrink-0 z-40 w-full">
             <div class="flex items-center gap-3">
                 <i class="fa-solid fa-ship text-2xl text-blue-400"></i>
                 <h1 class="text-lg font-bold tracking-wide">OGP Fluvial</h1>
@@ -74,44 +74,47 @@
                     <p class="text-xs text-slate-400">Conectado como</p>
                     <p id="displayUserRole" class="text-sm font-bold uppercase text-blue-300"></p>
                 </div>
-                <!-- BARRA DE NAVEGAÇÃO ROOT (Visível apenas para ADM) -->
-<nav id="nav_ADM" class="hidden bg-slate-800 p-2 flex gap-2 justify-center shadow-inner shrink-0 z-30">
-    <button onclick="abrirModulo('ADM')" class="btn-nav-adm px-5 py-2 bg-yellow-500 text-yellow-900 text-sm font-bold rounded hover:bg-yellow-400 transition shadow-sm"><i class="fa-solid fa-chart-pie mr-2"></i> Visão Geral</button>
-    <button onclick="abrirModulo('CARGAS')" class="btn-nav-adm px-5 py-2 bg-slate-700 text-white text-sm font-bold rounded hover:bg-slate-600 transition"><i class="fa-solid fa-truck-ramp-box mr-2"></i> Cargas</button>
-    <button onclick="abrirModulo('CAMAROTES')" class="btn-nav-adm px-5 py-2 bg-slate-700 text-white text-sm font-bold rounded hover:bg-slate-600 transition"><i class="fa-solid fa-bed mr-2"></i> Camarotes</button>
-    <button onclick="abrirModulo('RH')" class="btn-nav-adm px-5 py-2 bg-slate-700 text-white text-sm font-bold rounded hover:bg-slate-600 transition"><i class="fa-solid fa-users-gear mr-2"></i> RH</button>
-</nav>
+                
                 <button onclick="logout()" class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition shadow-sm" title="Sair do Sistema">
                     <i class="fa-solid fa-right-from-bracket"></i>
                 </button>
             </div>
         </header>
 
+        <!-- BARRA DE NAVEGAÇÃO ROOT (Visível apenas para ADM) -->
+        <!-- Agora posicionada FORA do cabeçalho, com scroll horizontal liberado para mobile -->
+        <nav id="nav_ADM" class="hidden w-full bg-slate-800 p-2 flex overflow-x-auto whitespace-nowrap gap-2 justify-start sm:justify-center shadow-inner shrink-0 z-30">
+            <button onclick="abrirModulo('ADM')" class="btn-nav-adm px-4 sm:px-5 py-2 bg-yellow-500 text-yellow-900 text-xs sm:text-sm font-bold rounded hover:bg-yellow-400 transition shadow-sm shrink-0"><i class="fa-solid fa-chart-pie mr-1 sm:mr-2"></i> Visão Geral</button>
+            <button onclick="abrirModulo('CARGAS')" class="btn-nav-adm px-4 sm:px-5 py-2 bg-slate-700 text-white text-xs sm:text-sm font-bold rounded hover:bg-slate-600 transition shrink-0"><i class="fa-solid fa-truck-ramp-box mr-1 sm:mr-2"></i> Cargas</button>
+            <button onclick="abrirModulo('CAMAROTES')" class="btn-nav-adm px-4 sm:px-5 py-2 bg-slate-700 text-white text-xs sm:text-sm font-bold rounded hover:bg-slate-600 transition shrink-0"><i class="fa-solid fa-bed mr-1 sm:mr-2"></i> Camarotes</button>
+            <button onclick="abrirModulo('RH')" class="btn-nav-adm px-4 sm:px-5 py-2 bg-slate-700 text-white text-xs sm:text-sm font-bold rounded hover:bg-slate-600 transition shrink-0"><i class="fa-solid fa-users-gear mr-1 sm:mr-2"></i> RH</button>
+        </nav>
+
 <!-- Contêiner de Sessões (Renderiza apenas a sessão permitida) -->
         <main class="flex-1 flex overflow-hidden relative">
-
-            <!-- SESSÃO: RECURSOS HUMANOS (RH) -->
-            <section id="panel_RH" class="role-panel hidden w-full h-full flex bg-slate-50">
-                <!-- Sidebar Exclusiva do RH -->
-                <aside class="w-64 bg-white border-r border-slate-200 flex flex-col shadow-sm shrink-0">
-                    <div class="p-4 border-b border-slate-100">
+<!-- SESSÃO: RECURSOS HUMANOS (RH) -->
+            <section id="panel_RH" class="role-panel hidden w-full h-full flex flex-col lg:flex-row bg-slate-50 overflow-y-auto">
+                <!-- Sidebar / Menu Superior Adaptativo do RH -->
+                <aside class="w-full lg:w-64 bg-white border-b lg:border-b-0 lg:border-r border-slate-200 flex flex-col shadow-sm shrink-0">
+                    <div class="p-3 lg:p-4 border-b border-slate-100 flex items-center justify-between">
                         <h2 class="text-xs font-black text-purple-600 uppercase tracking-wider"><i class="fa-solid fa-users-gear mr-1"></i> Módulo RH</h2>
                     </div>
-                    <nav class="flex-1 p-2 space-y-1">
-                        <button onclick="switchRHTab('dashboard')" id="btn_rh_dashboard" class="w-full flex items-center gap-3 px-4 py-3 bg-purple-50 text-purple-700 rounded-lg font-bold text-sm transition">
+                    <nav class="p-2 flex lg:flex-col gap-1 overflow-x-auto">
+                        <button onclick="switchRHTab('dashboard')" id="btn_rh_dashboard" class="flex-1 lg:flex-none flex items-center justify-center lg:justify-start gap-2 px-3 lg:px-4 py-2.5 bg-purple-50 text-purple-700 rounded-lg font-bold text-xs lg:text-sm transition whitespace-nowrap">
                             <i class="fa-solid fa-list-check"></i> Gestão de Usuários
                         </button>
-                        <button onclick="switchRHTab('cadastro')" id="btn_rh_cadastro" class="w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 rounded-lg font-bold text-sm transition">
+                        <button onclick="switchRHTab('cadastro')" id="btn_rh_cadastro" class="flex-1 lg:flex-none flex items-center justify-center lg:justify-start gap-2 px-3 lg:px-4 py-2.5 text-slate-600 hover:bg-slate-50 rounded-lg font-bold text-xs lg:text-sm transition whitespace-nowrap">
                             <i class="fa-solid fa-user-plus"></i> Novo Colaborador
                         </button>
                     </nav>
                 </aside>
 
                 <!-- Área de Conteúdo do RH -->
-                <div class="flex-1 overflow-y-auto p-6">
+                <div class="flex-1 overflow-y-auto p-4 lg:p-6 w-full">
+                    
                     <!-- RH Aba 1: Dashboard -->
-                    <div id="tab_rh_dashboard" class="rh-tab block space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div id="tab_rh_dashboard" class="rh-tab block space-y-4 lg:space-y-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4">
                                 <div class="bg-blue-100 text-blue-600 p-3 rounded-lg"><i class="fa-solid fa-users text-xl"></i></div>
                                 <div>
@@ -122,9 +125,9 @@
                         </div>
 
                         <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                                <h2 class="font-bold text-slate-700">Controle Matriz de Funcionários</h2>
-                                <input type="text" placeholder="Buscar..." class="px-3 py-2 rounded-lg border border-slate-300 text-sm w-64 outline-none focus:border-purple-500">
+                            <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 bg-slate-50">
+                                <h2 class="font-bold text-slate-700 text-sm sm:text-base">Controle Matriz de Funcionários</h2>
+                                <input type="text" placeholder="Buscar..." class="px-3 py-2 rounded-lg border border-slate-300 text-sm w-full sm:w-64 outline-none focus:border-purple-500">
                             </div>
                             <div class="overflow-x-auto p-4">
                                 <p class="text-sm text-slate-500 text-center py-4">Tabela de funcionários ativa (Estrutura de dados carregada aqui).</p>
@@ -134,41 +137,44 @@
 
                     <!-- RH Aba 2: Cadastro -->
                     <div id="tab_rh_cadastro" class="rh-tab hidden max-w-4xl mx-auto space-y-6">
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                            <h2 class="text-xl font-bold text-slate-800 border-b border-slate-100 pb-3 mb-6">Cadastro de Novo Usuário</h2>
+                        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-slate-100">
+                            <h2 class="text-lg sm:text-xl font-bold text-slate-800 border-b border-slate-100 pb-3 mb-6">Cadastro de Novo Usuário</h2>
+                            
                             <form id="formNovoUsuario" class="space-y-6">
                                 <div>
-                                    <h3 class="text-sm font-bold text-purple-700 uppercase mb-3"><i class="fa-regular fa-id-card mr-2"></i>Identificação do Colaborador</h3>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                        <div class="lg:col-span-2">
-                                            <label class="block text-sm font-medium text-slate-700 mb-1">Nome Completo</label>
+                                    <h3 class="text-xs sm:text-sm font-bold text-purple-700 uppercase mb-3"><i class="fa-regular fa-id-card mr-2"></i>Identificação do Colaborador</h3>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                        <div class="sm:col-span-2">
+                                            <label class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Nome Completo</label>
                                             <input type="text" placeholder="Ex: João da Silva" required class="w-full rounded-lg border border-slate-300 p-2 text-sm focus:ring-purple-500 focus:border-purple-500 outline-none">
                                         </div>
                                         <div>
-                                            <label class="block text-sm font-medium text-slate-700 mb-1">CPF</label>
+                                            <label class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">CPF</label>
                                             <input type="text" placeholder="000.000.000-00" required class="w-full rounded-lg border border-slate-300 p-2 text-sm focus:ring-purple-500 focus:border-purple-500 outline-none">
                                         </div>
                                         <div>
-                                            <label class="block text-sm font-medium text-slate-700 mb-1">Data de Nascimento</label>
+                                            <label class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Data de Nascimento</label>
                                             <input type="date" required class="w-full rounded-lg border border-slate-300 p-2 text-sm focus:ring-purple-500 focus:border-purple-500 outline-none">
                                         </div>
                                     </div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                    
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                                         <div>
-                                            <label class="block text-sm font-bold text-slate-700 mb-1 text-purple-900">ID Matrícula (Gerado pelo Sistema)</label>
+                                            <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1 text-purple-900">ID Matrícula (Gerado pelo Sistema)</label>
                                             <input type="text" id="idMatriculaGerada" readonly class="w-full rounded-lg border border-purple-200 bg-purple-100 text-purple-900 font-black p-2 text-sm cursor-not-allowed tracking-wider shadow-inner">
                                         </div>
                                     </div>
                                 </div>
+
                                 <div class="pt-4 border-t border-slate-100">
-                                    <h3 class="text-sm font-bold text-purple-700 uppercase mb-3"><i class="fa-solid fa-laptop-code mr-2"></i>Credenciais de Acesso</h3>
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <h3 class="text-xs sm:text-sm font-bold text-purple-700 uppercase mb-3"><i class="fa-solid fa-laptop-code mr-2"></i>Credenciais de Acesso</h3>
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                         <div>
-                                            <label class="block text-sm font-medium text-slate-700 mb-1">Usuário de Login</label>
+                                            <label class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Usuário de Login</label>
                                             <input type="text" placeholder="Ex: joao.silva" required class="w-full rounded-lg border border-slate-300 p-2 text-sm focus:ring-purple-500 focus:border-purple-500 outline-none">
                                         </div>
                                         <div>
-                                            <label class="block text-sm font-medium text-slate-700 mb-1">Perfil (Role)</label>
+                                            <label class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Perfil (Role)</label>
                                             <select required class="w-full rounded-lg border border-slate-300 p-2 text-sm font-bold text-slate-700 focus:ring-purple-500 focus:border-purple-500 outline-none">
                                                 <option value="">Definir Nível de Acesso...</option>
                                                 <option value="g_carga">Gerente de Cargas</option>
@@ -178,21 +184,21 @@
                                             </select>
                                         </div>
                                         <div>
-                                            <label class="block text-sm font-medium text-slate-700 mb-1">Senha Provisória</label>
+                                            <label class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Senha Provisória</label>
                                             <input type="text" value="Senha Padrão: Mudar@123" readonly class="w-full rounded-lg border border-slate-300 bg-slate-100 p-2 text-sm text-slate-500 cursor-not-allowed">
                                         </div>
                                     </div>
                                 </div>
-                                <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                                    <button type="button" onclick="switchRHTab('dashboard')" class="px-6 py-2 rounded-lg border border-slate-300 text-slate-700 font-bold text-sm hover:bg-slate-50 transition">Cancelar</button>
-                                    <button type="submit" class="px-6 py-2 rounded-lg bg-purple-700 text-white font-bold text-sm hover:bg-purple-800 transition shadow-md">Efetivar Registro</button>
+
+                                <div class="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-slate-100">
+                                    <button type="button" onclick="switchRHTab('dashboard')" class="w-full sm:w-auto px-6 py-2 rounded-lg border border-slate-300 text-slate-700 font-bold text-sm hover:bg-slate-50 transition">Cancelar</button>
+                                    <button type="submit" class="w-full sm:w-auto px-6 py-2 rounded-lg bg-purple-700 text-white font-bold text-sm hover:bg-purple-800 transition shadow-md">Efetivar Registro</button>
                                 </div>
                             </form>
                         </div>
                     </div>
                 </div>
             </section>
-
             <!-- SESSÃO UNIFICADA: SETOR DE CARGAS -->
             <section id="panel_CARGAS" class="role-panel hidden w-full h-full flex flex-col bg-slate-50 overflow-hidden">
                 <div class="bg-white p-4 shadow-sm border-b border-slate-200 flex justify-between items-center shrink-0">
@@ -467,72 +473,88 @@
                 </div>
             </section>
 
-            <!-- SESSÃO: ADMINISTRADOR ROOT (Dashboard) -->
-            <section id="panel_ADM" class="role-panel hidden w-full h-full bg-slate-50 overflow-y-auto">
-                <div class="max-w-7xl mx-auto p-6 space-y-6">
-                    <div class="flex items-center justify-between border-b border-slate-200 pb-4">
-                        <h2 class="text-2xl font-black text-slate-800"><i class="fa-solid fa-chess-king text-yellow-500 mr-2"></i>Dashboard Mestre</h2>
-                        <p class="text-sm font-bold text-slate-500 bg-white px-3 py-1 rounded shadow-sm border border-slate-100">Atualizado: Agora</p>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 border-l-4 border-l-green-500">
-                            <p class="text-xs font-bold text-slate-400 uppercase">Receita Cargas (Mês)</p>
-                            <h3 class="text-2xl font-black text-slate-800 mt-1">R$ 18.500,00</h3>
-                        </div>
-                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 border-l-4 border-l-indigo-500">
-                            <p class="text-xs font-bold text-slate-400 uppercase">Receita Camarotes (Mês)</p>
-                            <h3 class="text-2xl font-black text-slate-800 mt-1">R$ 4.250,00</h3>
-                        </div>
-                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 border-l-4 border-l-blue-500">
-                            <p class="text-xs font-bold text-slate-400 uppercase">Status do Pátio</p>
-                            <h3 class="text-2xl font-black text-slate-800 mt-1">12 <span class="text-sm font-medium text-slate-400">Veículos</span></h3>
-                        </div>
-                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 border-l-4 border-l-purple-500">
-                            <p class="text-xs font-bold text-slate-400 uppercase">Ocupação Camarotes</p>
-                            <h3 class="text-2xl font-black text-slate-800 mt-1">15/17 <span class="text-sm font-medium text-slate-400">Ocupados</span></h3>
-                        </div>
-                    </div>
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100">
-                        <h2 class="text-md font-bold text-slate-700 mb-3"><i class="fa-solid fa-list-check text-slate-400 mr-2"></i>Últimas Movimentações Globais</h2>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-slate-200">
-                                <thead class="bg-slate-50">
-                                    <tr>
-                                        <th class="px-3 py-2 text-left text-xs font-bold text-slate-500">Data/Hora</th>
-                                        <th class="px-3 py-2 text-left text-xs font-bold text-slate-500">Setor</th>
-                                        <th class="px-3 py-2 text-left text-xs font-bold text-slate-500">Ação / Registro</th>
-                                        <th class="px-3 py-2 text-left text-xs font-bold text-slate-500">Operador</th>
-                                        <th class="px-3 py-2 text-right text-xs font-bold text-slate-500">Valor Auditado</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100">
-                                    <tr>
-                                        <td class="px-3 py-2 text-xs text-slate-600">Hoje, 10:45</td>
-                                        <td class="px-3 py-2 text-xs font-bold text-indigo-600">CAMAROTES</td>
-                                        <td class="px-3 py-2 text-sm text-slate-700">Venda Bilhete - Camarote 05 (Maria Oliveira)</td>
-                                        <td class="px-3 py-2 text-xs font-bold text-slate-400">OCAM</td>
-                                        <td class="px-3 py-2 text-sm font-bold text-slate-800 text-right">R$ 250,00</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="px-3 py-2 text-xs text-slate-600">Hoje, 09:30</td>
-                                        <td class="px-3 py-2 text-xs font-bold text-blue-600">CARGAS</td>
-                                        <td class="px-3 py-2 text-sm text-slate-700">Registro Veículo - Hilux (QWA-9922)</td>
-                                        <td class="px-3 py-2 text-xs font-bold text-slate-400">OCARGA</td>
-                                        <td class="px-3 py-2 text-sm font-bold text-slate-800 text-right">R$ 1.500,00</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="px-3 py-2 text-xs text-slate-600">Hoje, 08:15</td>
-                                        <td class="px-3 py-2 text-xs font-bold text-red-600">CARGAS (DEL)</td>
-                                        <td class="px-3 py-2 text-sm text-slate-700 line-through">Remoção de Agendamento (MNT-1020)</td>
-                                        <td class="px-3 py-2 text-xs font-bold text-slate-400">ADM</td>
-                                        <td class="px-3 py-2 text-sm font-bold text-slate-800 text-right text-red-500">- R$ 1.000,00</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
+           <!-- SESSÃO: ADMINISTRADOR ROOT (Dashboard) -->
+<section id="panel_ADM" class="role-panel hidden w-full h-full bg-slate-50 overflow-y-auto">
+    <div class="max-w-7xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
+        
+        <!-- Cabeçalho (Empilha no celular, lado a lado no desktop) -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 pb-3 sm:pb-4 gap-3">
+            <h2 class="text-xl sm:text-2xl font-black text-slate-800 leading-tight">
+                <i class="fa-solid fa-chess-king text-yellow-500 mr-2"></i>Dashboard Mestre
+            </h2>
+            <p class="text-[11px] sm:text-sm font-bold text-slate-500 bg-white px-3 py-1.5 rounded shadow-sm border border-slate-100 self-start sm:self-auto">
+                Atualizado: Agora
+            </p>
+        </div>
+        
+        <!-- Cards de Receita e Ocupação (1 coluna no mobile, 2 no tablet, 4 no desktop) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-slate-100 border-l-4 border-l-green-500">
+                <p class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wide">Receita Cargas (Mês)</p>
+                <h3 class="text-xl sm:text-2xl font-black text-slate-800 mt-1">R$ 18.500,00</h3>
+            </div>
+            
+            <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-slate-100 border-l-4 border-l-indigo-500">
+                <p class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wide">Receita Camarotes (Mês)</p>
+                <h3 class="text-xl sm:text-2xl font-black text-slate-800 mt-1">R$ 4.250,00</h3>
+            </div>
+
+            <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-slate-100 border-l-4 border-l-blue-500">
+                <p class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wide">Status do Pátio</p>
+                <h3 class="text-xl sm:text-2xl font-black text-slate-800 mt-1">12 <span class="text-xs sm:text-sm font-medium text-slate-400">Veículos</span></h3>
+            </div>
+
+            <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-slate-100 border-l-4 border-l-purple-500">
+                <p class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wide">Ocupação Camarotes</p>
+                <h3 class="text-xl sm:text-2xl font-black text-slate-800 mt-1">15/17 <span class="text-xs sm:text-sm font-medium text-slate-400">Ocupados</span></h3>
+            </div>
+        </div>
+
+        <!-- Tabela de Movimentação Global Recente -->
+        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-slate-100 w-full overflow-hidden">
+            <h2 class="text-sm sm:text-md font-bold text-slate-700 mb-3"><i class="fa-solid fa-list-check text-slate-400 mr-2"></i>Últimas Movimentações Globais</h2>
+            
+            <!-- Contêiner de Scroll Independente para a tabela não estourar a tela -->
+            <div class="overflow-x-auto w-full -mx-4 sm:mx-0 px-4 sm:px-0 scroll-smooth pb-2">
+                <table class="min-w-full divide-y divide-slate-200">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-3 py-2 text-left text-[10px] sm:text-xs font-bold text-slate-500 uppercase">Data/Hora</th>
+                            <th class="px-3 py-2 text-left text-[10px] sm:text-xs font-bold text-slate-500 uppercase">Setor</th>
+                            <th class="px-3 py-2 text-left text-[10px] sm:text-xs font-bold text-slate-500 uppercase">Ação / Registro</th>
+                            <th class="px-3 py-2 text-left text-[10px] sm:text-xs font-bold text-slate-500 uppercase">Operador</th>
+                            <th class="px-3 py-2 text-right text-[10px] sm:text-xs font-bold text-slate-500 uppercase">Valor Auditado</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <tr>
+                            <td class="px-3 py-3 text-[11px] sm:text-xs text-slate-600 whitespace-nowrap">Hoje, 10:45</td>
+                            <td class="px-3 py-3 text-[11px] sm:text-xs font-bold text-indigo-600">CAMAROTES</td>
+                            <td class="px-3 py-3 text-xs sm:text-sm text-slate-700 min-w-[200px]">Venda Bilhete - Camarote 05 (Maria Oliveira)</td>
+                            <td class="px-3 py-3 text-[11px] sm:text-xs font-bold text-slate-400">OCAM</td>
+                            <td class="px-3 py-3 text-xs sm:text-sm font-bold text-slate-800 text-right whitespace-nowrap">R$ 250,00</td>
+                        </tr>
+                        <tr>
+                            <td class="px-3 py-3 text-[11px] sm:text-xs text-slate-600 whitespace-nowrap">Hoje, 09:30</td>
+                            <td class="px-3 py-3 text-[11px] sm:text-xs font-bold text-blue-600">CARGAS</td>
+                            <td class="px-3 py-3 text-xs sm:text-sm text-slate-700 min-w-[200px]">Registro Veículo - Hilux (QWA-9922)</td>
+                            <td class="px-3 py-3 text-[11px] sm:text-xs font-bold text-slate-400">OCARGA</td>
+                            <td class="px-3 py-3 text-xs sm:text-sm font-bold text-slate-800 text-right whitespace-nowrap">R$ 1.500,00</td>
+                        </tr>
+                        <tr>
+                            <td class="px-3 py-3 text-[11px] sm:text-xs text-slate-600 whitespace-nowrap">Hoje, 08:15</td>
+                            <td class="px-3 py-3 text-[11px] sm:text-xs font-bold text-red-600 whitespace-nowrap">CARGAS (DEL)</td>
+                            <td class="px-3 py-3 text-xs sm:text-sm text-slate-700 line-through min-w-[200px]">Remoção de Agendamento (MNT-1020)</td>
+                            <td class="px-3 py-3 text-[11px] sm:text-xs font-bold text-slate-400">ADM</td>
+                            <td class="px-3 py-3 text-xs sm:text-sm font-bold text-slate-800 text-right text-red-500 whitespace-nowrap">- R$ 1.000,00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</section>
 
         </main>
     </div>
