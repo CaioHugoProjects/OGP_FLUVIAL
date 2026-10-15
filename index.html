@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OGP Fluvial - Sistema Integrado</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Garante que elementos ocultos não ocupem espaço */
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased h-screen w-screen overflow-hidden flex flex-col">
+
+    <!-- ========================================== -->
+    <!-- 1. TELA DE LOGIN                           -->
+    <!-- ========================================== -->
+    <div id="loginScreen" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm">
+            <div class="text-center mb-8">
+                <i class="fa-solid fa-ship text-5xl text-blue-900 mb-3"></i>
+                <h1 class="text-2xl font-black text-slate-800 uppercase tracking-wide">Login OGP Fluvial</h1>
+                <p class="text-sm text-slate-500 mt-1">Acesso Restrito</p>
+            </div>
+            
+            <div id="loginError" class="hidden mb-6 p-3 bg-red-100 border border-red-300 text-red-700 text-sm rounded-lg text-center font-bold">
+                Usuário ou senha incorretos.
+            </div>
+
+            <form id="loginForm" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Usuário</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-user text-slate-400"></i>
+                        </div>
+                        <input type="text" id="usernameInput" required class="block w-full pl-10 pr-3 py-3 rounded-lg border border-slate-300 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-slate-50 outline-none transition">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Senha</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-lock text-slate-400"></i>
+                        </div>
+                        <input type="password" id="passwordInput" required class="block w-full pl-10 pr-3 py-3 rounded-lg border border-slate-300 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-slate-50 outline-none transition">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-blue-900 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-800 transition shadow-lg mt-2">
+                    Entrar
+                </button>
+            </form>
+            <div class="mt-6 text-[11px] text-slate-400 text-center bg-slate-50 p-2 rounded border border-slate-100">
+                <b>Credenciais de Teste (Senha: 123)</b><br>
+                RH, ADM, GCARGA, OCARGA, GCAM, OCAM
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 2. SISTEMA PRINCIPAL                       -->
+    <!-- ========================================== -->
+    <div id="mainApp" class="hidden flex-col h-full w-full">
+        
+        <!-- Cabeçalho Global (Fixo no topo para todos os usuários) -->
+        <header class="bg-slate-900 text-white p-4 shadow-md flex justify-between items-center shrink-0 z-40">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-ship text-2xl text-blue-400"></i>
+                <h1 class="text-lg font-bold tracking-wide">OGP Fluvial</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right hidden sm:block">
+                    <p class="text-xs text-slate-400">Conectado como</p>
+                    <p id="displayUserRole" class="text-sm font-bold uppercase text-blue-300"></p>
+                </div>
+                <!-- BARRA DE NAVEGAÇÃO ROOT (Visível apenas para ADM) -->
+<nav id="nav_ADM" class="hidden bg-slate-800 p-2 flex gap-2 justify-center shadow-inner shrink-0 z-30">
+    <button onclick="abrirModulo('ADM')" class="btn-nav-adm px-5 py-2 bg-yellow-500 text-yellow-900 text-sm font-bold rounded hover:bg-yellow-400 transition shadow-sm"><i class="fa-solid fa-chart-pie mr-2"></i> Visão Geral</button>
+    <button onclick="abrirModulo('CARGAS')" class="btn-nav-adm px-5 py-2 bg-slate-700 text-white text-sm font-bold rounded hover:bg-slate-600 transition"><i class="fa-solid fa-truck-ramp-box mr-2"></i> Cargas</button>
+    <button onclick="abrirModulo('CAMAROTES')" class="btn-nav-adm px-5 py-2 bg-slate-700 text-white text-sm font-bold rounded hover:bg-slate-600 transition"><i class="fa-solid fa-bed mr-2"></i> Camarotes</button>
+    <button onclick="abrirModulo('RH')" class="btn-nav-adm px-5 py-2 bg-slate-700 text-white text-sm font-bold rounded hover:bg-slate-600 transition"><i class="fa-solid fa-users-gear mr-2"></i> RH</button>
+</nav>
+                <button onclick="logout()" class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition shadow-sm" title="Sair do Sistema">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+        </header>
+
+<!-- Contêiner de Sessões (Renderiza apenas a sessão permitida) -->
+        <main class="flex-1 flex overflow-hidden relative">
+
+            <!-- SESSÃO: RECURSOS HUMANOS (RH) -->
+            <section id="panel_RH" class="role-panel hidden w-full h-full flex bg-slate-50">
+                <!-- Sidebar Exclusiva do RH -->
+                <aside class="w-64 bg-white border-r border-slate-200 flex flex-col shadow-sm shrink-0">
+                    <div class="p-4 border-b border-slate-100">
+                        <h2 class="text-xs font-black text-purple-600 uppercase tracking-wider"><i class="fa-solid fa-users-gear mr-1"></i> Módulo RH</h2>
+                    </div>
+                    <nav class="flex-1 p-2 space-y-1">
+                        <button onclick="switchRHTab('dashboard')" id="btn_rh_dashboard" class="w-full flex items-center gap-3 px-4 py-3 bg-purple-50 text-purple-700 rounded-lg font-bold text-sm transition">
+                            <i class="fa-solid fa-list-check"></i> Gestão de Usuários
+                        </button>
+                        <button onclick="switchRHTab('cadastro')" id="btn_rh_cadastro" class="w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 rounded-lg font-bold text-sm transition">
+                            <i class="fa-solid fa-user-plus"></i> Novo Colaborador
+                        </button>
+                    </nav>
+                </aside>
+
+                <!-- Área de Conteúdo do RH -->
+                <div class="flex-1 overflow-y-auto p-6">
+                    <!-- RH Aba 1: Dashboard -->
+                    <div id="tab_rh_dashboard" class="rh-tab block space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4">
+                                <div class="bg-blue-100 text-blue-600 p-3 rounded-lg"><i class="fa-solid fa-users text-xl"></i></div>
+                                <div>
+                                    <p class="text-xs font-bold text-slate-500 uppercase">Total Cadastrados</p>
+                                    <h3 class="text-2xl font-black text-slate-800">24</h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                                <h2 class="font-bold text-slate-700">Controle Matriz de Funcionários</h2>
+                                <input type="text" placeholder="Buscar..." class="px-3 py-2 rounded-lg border border-slate-300 text-sm w-64 outline-none focus:border-purple-500">
+                            </div>
+                            <div class="overflow-x-auto p-4">
+                                <p class="text-sm text-slate-500 text-center py-4">Tabela de funcionários ativa (Estrutura de dados carregada aqui).</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RH Aba 2: Cadastro -->
+                    <div id="tab_rh_cadastro" class="rh-tab hidden max-w-4xl mx-auto space-y-6">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                            <h2 class="text-xl font-bold text-slate-800 border-b border-slate-100 pb-3 mb-6">Cadastro de Novo Usuário</h2>
+                            <form id="formNovoUsuario" class="space-y-6">
+                                <div>
+                                    <h3 class="text-sm font-bold text-purple-700 uppercase mb-3"><i class="fa-regular fa-id-card mr-2"></i>Identificação do Colaborador</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                        <div class="lg:col-span-2">
+                                            <label class="block text-sm font-medium text-slate-700 mb-1">Nome Completo</label>
+                                            <input type="text" placeholder="Ex: João da Silva" required class="w-full rounded-lg border border-slate-300 p-2 text-sm focus:ring-purple-500 focus:border-purple-500 outline-none">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-slate-700 mb-1">CPF</label>
+                                            <input type="text" placeholder="000.000.000-00" required class="w-full rounded-lg border border-slate-300 p-2 text-sm focus:ring-purple-500 focus:border-purple-500 outline-none">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-slate-700 mb-1">Data de Nascimento</label>
+                                            <input type="date" required class="w-full rounded-lg border border-slate-300 p-2 text-sm focus:ring-purple-500 focus:border-purple-500 outline-none">
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                        <div>
+                                            <label class="block text-sm font-bold text-slate-700 mb-1 text-purple-900">ID Matrícula (Gerado pelo Sistema)</label>
+                                            <input type="text" id="idMatriculaGerada" readonly class="w-full rounded-lg border border-purple-200 bg-purple-100 text-purple-900 font-black p-2 text-sm cursor-not-allowed tracking-wider shadow-inner">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="pt-4 border-t border-slate-100">
+                                    <h3 class="text-sm font-bold text-purple-700 uppercase mb-3"><i class="fa-solid fa-laptop-code mr-2"></i>Credenciais de Acesso</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-slate-700 mb-1">Usuário de Login</label>
+                                            <input type="text" placeholder="Ex: joao.silva" required class="w-full rounded-lg border border-slate-300 p-2 text-sm focus:ring-purple-500 focus:border-purple-500 outline-none">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-slate-700 mb-1">Perfil (Role)</label>
+                                            <select required class="w-full rounded-lg border border-slate-300 p-2 text-sm font-bold text-slate-700 focus:ring-purple-500 focus:border-purple-500 outline-none">
+                                                <option value="">Definir Nível de Acesso...</option>
+                                                <option value="g_carga">Gerente de Cargas</option>
+                                                <option value="o_carga">Operador de Cargas</option>
+                                                <option value="g_cam">Gerente de Camarote</option>
+                                                <option value="o_cam">Operador de Camarote</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-slate-700 mb-1">Senha Provisória</label>
+                                            <input type="text" value="Senha Padrão: Mudar@123" readonly class="w-full rounded-lg border border-slate-300 bg-slate-100 p-2 text-sm text-slate-500 cursor-not-allowed">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                                    <button type="button" onclick="switchRHTab('dashboard')" class="px-6 py-2 rounded-lg border border-slate-300 text-slate-700 font-bold text-sm hover:bg-slate-50 transition">Cancelar</button>
+                                    <button type="submit" class="px-6 py-2 rounded-lg bg-purple-700 text-white font-bold text-sm hover:bg-purple-800 transition shadow-md">Efetivar Registro</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SESSÃO UNIFICADA: SETOR DE CARGAS -->
+            <section id="panel_CARGAS" class="role-panel hidden w-full h-full flex flex-col bg-slate-50 overflow-hidden">
+                <div class="bg-white p-4 shadow-sm border-b border-slate-200 flex justify-between items-center shrink-0">
+                    <h2 class="text-xl font-bold text-blue-900"><i class="fa-solid fa-truck-ramp-box mr-2"></i>Gestão de Pátio e Agendamentos</h2>
+                    <button id="btnPatio" class="admin-cargo-only hidden px-4 py-2 rounded-lg font-bold text-sm transition shadow-sm bg-green-100 text-green-700 border border-green-300 hover:bg-green-200">
+                        <i class="fa-solid fa-check-circle mr-1"></i> Pátio Vazio (Lotar)
+                    </button>
+                </div>
+                <div class="flex-1 overflow-y-auto p-6">
+                    <div class="max-w-7xl mx-auto space-y-6">
+                        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                            <div class="col-span-1 bg-white p-6 rounded-xl shadow-sm border border-slate-100 h-fit">
+                                <h2 class="text-lg font-bold border-b pb-2 mb-4 text-slate-700">Novo Agendamento</h2>
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-5">
+                                    <h3 class="text-xs font-bold text-blue-900 uppercase mb-2"><i class="fa-solid fa-route mr-1"></i> Cronograma da Semana</h3>
+                                    <ul class="text-xs text-blue-800 space-y-1 font-medium">
+                                        <li><i class="fa-solid fa-arrow-right text-blue-500 w-4"></i> <b>Seg & Qua:</b> Oriximiná ➔ Santarém</li>
+                                        <li><i class="fa-solid fa-arrow-left text-green-500 w-4"></i> <b>Ter & Qui:</b> Santarém ➔ Oriximiná</li>
+                                    </ul>
+                                </div>
+                                <form id="formCarga" class="space-y-6">
+                                    <div>
+                                        <h3 class="text-xs font-bold text-slate-400 uppercase mb-3 border-b border-slate-100 pb-1">1. Dados do Cliente e Viagem</h3>
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-slate-700">Nome do Dono da Carga</label>
+                                                <input type="text" placeholder="Nome completo" required class="mt-1 block w-full rounded-md border-slate-300 p-2 border text-sm outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-slate-700">CPF</label>
+                                                    <input type="text" placeholder="000.000.000-00" required class="mt-1 block w-full rounded-md border-slate-300 p-2 border text-sm outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-slate-700">Data de Embarque</label>
+                                                    <input type="date" id="inputDataCarga" required class="mt-1 block w-full rounded-md border-slate-300 p-2 border text-sm outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                                    <p id="rotaAutomatica" class="text-[11px] font-bold mt-1 min-h-[16px] text-slate-500"></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-xs font-bold text-slate-400 uppercase mb-3 border-b border-slate-100 pb-1">2. Dados do Veículo</h3>
+                                        <div class="space-y-4">
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-slate-700">Modelo</label>
+                                                    <input type="text" placeholder="Ex: Hilux" required class="mt-1 block w-full rounded-md border-slate-300 p-2 border text-sm outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-slate-700">Placa</label>
+                                                    <input type="text" placeholder="ABC-1234" required class="mt-1 block w-full rounded-md border-slate-300 p-2 border text-sm uppercase outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                                </div>
+                                            </div>
+                                            <div class="space-y-2 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                                <div class="flex justify-between items-center mb-1">
+                                                    <label class="block text-sm font-medium text-slate-700">Telefones</label>
+                                                    <button type="button" id="btnAddPhone" class="text-xs text-blue-600 hover:text-blue-800 font-bold bg-blue-100 px-2 py-1 rounded transition">+ Adicionar</button>
+                                                </div>
+                                                <div id="phoneContainer" class="space-y-2">
+                                                    <div class="flex items-center space-x-2">
+                                                        <input type="tel" placeholder="(00) 00000-0000" required class="block w-full rounded-md border-slate-300 p-2 border text-sm outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                                        <span class="text-[10px] text-red-500 font-bold uppercase w-16 text-center">*Obrigatório</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="admin-cargo-only hidden bg-yellow-50 p-4 rounded-lg border border-yellow-200 mt-2">
+                                        <label class="block text-sm font-bold text-yellow-800"><i class="fa-solid fa-dollar-sign mr-1"></i> Valor Cobrado (R$)</label>
+                                        <input type="number" step="0.01" placeholder="0.00" class="mt-1 block w-full rounded-md border-yellow-300 p-2 border bg-white text-sm outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500">
+                                    </div>
+                                    <button type="submit" class="w-full bg-blue-900 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-800 transition shadow-md">Registrar Agendamento</button>
+                                </form>
+                            </div>
+                            <div class="col-span-1 xl:col-span-2 space-y-6">
+                                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-4">
+                                    <div class="bg-blue-50 border border-blue-100 p-4 rounded-lg md:w-1/3 text-center flex flex-col justify-center">
+                                        <h3 class="text-sm font-bold text-blue-900 mb-2"><i class="fa-regular fa-calendar-day mr-1"></i> Embarques de Hoje</h3>
+                                        <button id="btnVerHojeCarga" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-3 rounded shadow-sm">Filtrar Data Atual</button>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h3 class="text-sm font-bold text-slate-700 mb-2"><i class="fa-solid fa-magnifying-glass mr-1"></i> Busca Avançada</h3>
+                                        <div class="space-y-2">
+                                            <div class="flex gap-2">
+                                                <input type="text" id="buscaTextoCarga" placeholder="Nome, Modelo ou Placa..." class="flex-1 rounded border-slate-300 p-2 border text-sm">
+                                                <input type="date" id="buscaDataCarga" class="rounded border-slate-300 p-2 border text-sm">
+                                            </div>
+                                            <div class="flex gap-2">
+                                                <button id="btnBuscarCarga" class="flex-1 bg-slate-800 text-white text-sm font-bold py-2 rounded">Pesquisar</button>
+                                                <button id="btnLimparCarga" class="bg-slate-200 text-slate-700 text-sm font-bold py-2 px-4 rounded">Limpar</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100">
+                                    <h2 class="text-md font-bold text-slate-700 mb-3"><i class="fa-regular fa-calendar-check text-blue-500 mr-2"></i>Próximos Agendamentos</h2>
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-slate-200" id="tabelaCargas">
+                                            <thead class="bg-slate-50">
+                                                <tr>
+                                                    <th class="px-3 py-2 text-left text-xs font-bold text-slate-500">Data</th>
+                                                    <th class="px-3 py-2 text-left text-xs font-bold text-slate-500">Rota</th>
+                                                    <th class="px-3 py-2 text-left text-xs font-bold text-slate-500">Veículo</th>
+                                                    <th class="px-3 py-2 text-left text-xs font-bold text-slate-500">Dono</th>
+                                                    <th class="px-3 py-2 text-left text-xs font-bold text-slate-500">Operador</th>
+                                                    <th class="px-3 py-2 text-center text-xs font-bold text-slate-500 admin-cargo-only hidden">Valor (R$)</th>
+                                                    <th class="px-3 py-2 text-right text-xs font-bold text-slate-500">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-slate-100">
+                                                <tr class="linha-carga">
+                                                    <td class="px-3 py-3 text-sm font-bold text-slate-800 celula-data">14/10/2026</td>
+                                                    <td class="px-3 py-3 text-xs font-bold text-blue-600">ORX ➔ STM</td>
+                                                    <td class="px-3 py-3 text-sm text-slate-600 celula-texto">Hilux <br><span class="text-xs bg-slate-100 px-1 rounded">QWA-9922</span></td>
+                                                    <td class="px-3 py-3 text-sm text-slate-600 celula-texto">Carlos Silva</td>
+                                                    <td class="px-3 py-3 text-xs font-bold text-slate-400">OCARGA</td>
+                                                    <td class="px-3 py-3 text-center admin-cargo-only hidden"><input type="number" value="1500.00" class="w-20 text-xs border p-1 rounded text-center"></td>
+                                                    <td class="px-3 py-3 text-right"><button class="text-red-600 font-bold text-xs btn-remover" data-owner="OCARGA">Remover</button></td>
+                                                </tr>
+                                                <tr class="linha-carga">
+                                                    <td class="px-3 py-3 text-sm font-bold text-slate-800 celula-data">15/10/2026</td>
+                                                    <td class="px-3 py-3 text-xs font-bold text-green-600">STM ➔ ORX</td>
+                                                    <td class="px-3 py-3 text-sm text-slate-600 celula-texto">Strada <br><span class="text-xs bg-slate-100 px-1 rounded">MNT-1020</span></td>
+                                                    <td class="px-3 py-3 text-sm text-slate-600 celula-texto">Ana Souza</td>
+                                                    <td class="px-3 py-3 text-xs font-bold text-slate-400">ADM</td>
+                                                    <td class="px-3 py-3 text-center admin-cargo-only hidden"><input type="number" value="1000.00" class="w-20 text-xs border p-1 rounded text-center"></td>
+                                                    <td class="px-3 py-3 text-right"><button class="text-red-600 font-bold text-xs btn-remover" data-owner="ADM">Remover</button></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100">
+                                    <h2 class="text-md font-bold text-slate-700 mb-3"><i class="fa-solid fa-clock-rotate-left text-slate-400 mr-2"></i>Histórico (Concluídos)</h2>
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-slate-200 opacity-70">
+                                            <thead class="bg-slate-50">
+                                                <tr>
+                                                    <th class="px-3 py-2 text-left text-xs font-bold text-slate-500">Data</th>
+                                                    <th class="px-3 py-2 text-left text-xs font-bold text-slate-500">Veículo</th>
+                                                    <th class="px-3 py-2 text-left text-xs font-bold text-slate-500">Status</th>
+                                                    <th class="px-3 py-2 text-center text-xs font-bold text-slate-500 admin-cargo-only hidden">Valor Cobrado</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td class="px-3 py-2 text-sm">12/10/2026</td>
+                                                    <td class="px-3 py-2 text-sm">S10 (XYZ-1122)</td>
+                                                    <td class="px-3 py-2"><span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">Embarcado</span></td>
+                                                    <td class="px-3 py-2 text-center admin-cargo-only hidden text-sm font-bold text-slate-600">R$ 1.800,00</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SESSÃO UNIFICADA: SETOR DE CAMAROTES -->
+            <section id="panel_CAMAROTES" class="role-panel hidden w-full h-full flex flex-col bg-slate-50 overflow-hidden">
+                <div class="bg-white p-4 shadow-sm border-b border-slate-200 flex justify-between items-center shrink-0">
+                    <h2 class="text-xl font-bold text-indigo-900"><i class="fa-solid fa-bed mr-2"></i>Gestão de Camarotes e Passageiros</h2>
+                    <div class="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200">
+                        Capacidade: <span class="text-indigo-600">17</span> Normais | <span class="text-red-500">1</span> Enfermaria
+                    </div>
+                </div>
+                <div class="flex-1 overflow-y-auto p-6">
+                    <div class="max-w-7xl mx-auto space-y-6">
+                        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                            <div class="col-span-1 bg-white p-6 rounded-xl shadow-sm border border-slate-100 h-fit">
+                                <h2 class="text-lg font-bold border-b pb-2 mb-4 text-slate-700">Emissão de Bilhete</h2>
+                                <form id="formCamarote" class="space-y-5">
+                                    <div>
+                                        <h3 class="text-xs font-bold text-slate-400 uppercase mb-3 border-b border-slate-100 pb-1">1. Dados da Viagem</h3>
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-slate-700">Data de Embarque</label>
+                                                <input type="date" id="inputDataCamarote" required class="mt-1 block w-full rounded-md border-slate-300 p-2 border text-sm outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                                                <p id="rotaAutomaticaCamarote" class="text-[11px] font-bold mt-1 min-h-[16px] text-slate-500"></p>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-slate-700">Nº do Camarote Selecionado</label>
+                                                <input type="text" id="inputNumCamarote" readonly placeholder="Clique no mapa ao lado..." required class="mt-1 block w-full rounded-md border-indigo-200 bg-indigo-50 text-indigo-900 font-bold p-2 text-center text-sm outline-none cursor-not-allowed">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-xs font-bold text-slate-400 uppercase mb-3 border-b border-slate-100 pb-1">2. Dados do Passageiro</h3>
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-slate-700">Nome Completo</label>
+                                                <input type="text" placeholder="Nome do passageiro" required class="mt-1 block w-full rounded-md border-slate-300 p-2 border text-sm outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-slate-700">CPF</label>
+                                                    <input type="text" placeholder="000.000.000-00" required class="mt-1 block w-full rounded-md border-slate-300 p-2 border text-sm outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-slate-700">Nascimento</label>
+                                                    <input type="date" required class="mt-1 block w-full rounded-md border-slate-300 p-2 border text-sm outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="blocoEnfermaria" class="hidden bg-red-50 p-4 rounded-lg border border-red-200 mt-2">
+                                        <h3 class="text-xs font-black text-red-700 uppercase mb-2"><i class="fa-solid fa-briefcase-medical mr-1"></i> Registro de Paciente</h3>
+                                        <label class="block text-sm font-medium text-red-900">Motivo Médico / Situação</label>
+                                        <input type="text" id="motivoMedico" placeholder="Ex: Transferência para hospital base..." class="mt-1 block w-full rounded-md border-red-300 p-2 border bg-white text-sm outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500">
+                                    </div>
+                                    <div class="admin-cam-only hidden bg-yellow-50 p-4 rounded-lg border border-yellow-200 mt-2">
+                                        <label class="block text-sm font-bold text-yellow-800"><i class="fa-solid fa-dollar-sign mr-1"></i> Valor Cobrado (R$)</label>
+                                        <input type="number" step="0.01" placeholder="0.00" class="mt-1 block w-full rounded-md border-yellow-300 p-2 border bg-white text-sm outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500">
+                                    </div>
+                                    <button type="submit" class="w-full bg-indigo-900 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-800 transition shadow-md">Emitir Bilhete</button>
+                                </form>
+                            </div>
+                            <div class="col-span-1 xl:col-span-2 space-y-6">
+                                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 relative">
+                                    <div id="overlayMapaCamarote" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-xl border border-dashed border-indigo-300">
+                                        <i class="fa-regular fa-calendar-days text-4xl text-indigo-300 mb-3"></i>
+                                        <p class="text-indigo-800 font-bold">Selecione a Data de Embarque</p>
+                                        <p class="text-xs text-indigo-600 mt-1">O mapa será liberado após a definição da data.</p>
+                                    </div>
+                                    <h2 class="text-md font-bold text-slate-700 mb-4 border-b pb-2"><i class="fa-solid fa-map text-indigo-500 mr-2"></i>Mapa Interativo do Barco</h2>
+                                    <div class="grid grid-cols-3 md:grid-cols-6 gap-3" id="mapaCamarotesGrid">
+                                        <!-- Gerado via JS -->
+                                    </div>
+                                </div>
+                                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100">
+                                    <h2 class="text-md font-bold text-slate-700 mb-3"><i class="fa-solid fa-users text-indigo-500 mr-2"></i>Passageiros Registrados</h2>
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-slate-200">
+                                            <thead class="bg-slate-50">
+                                                <tr>
+                                                    <th class="px-3 py-2 text-left text-xs font-bold text-slate-500">Nº</th>
+                                                    <th class="px-3 py-2 text-left text-xs font-bold text-slate-500">Passageiro</th>
+                                                    <th class="px-3 py-2 text-left text-xs font-bold text-slate-500">CPF</th>
+                                                    <th class="px-3 py-2 text-left text-xs font-bold text-slate-500">Operador</th>
+                                                    <th class="px-3 py-2 text-center text-xs font-bold text-slate-500 admin-cam-only hidden">Valor (R$)</th>
+                                                    <th class="px-3 py-2 text-right text-xs font-bold text-slate-500">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-slate-100">
+                                                <tr>
+                                                    <td class="px-3 py-3 text-sm font-black text-indigo-900">01</td>
+                                                    <td class="px-3 py-3 text-sm font-medium text-slate-700">Maria Oliveira</td>
+                                                    <td class="px-3 py-3 text-xs text-slate-500">111.222.333-44</td>
+                                                    <td class="px-3 py-3 text-xs font-bold text-slate-400">OCAM</td>
+                                                    <td class="px-3 py-3 text-center admin-cam-only hidden"><span class="text-sm font-bold text-slate-700">R$ 250,00</span></td>
+                                                    <td class="px-3 py-3 text-right"><button class="text-red-600 font-bold text-xs btn-remover-cam" data-owner="OCAM">Remover</button></td>
+                                                </tr>
+                                                <tr class="bg-red-50/50">
+                                                    <td class="px-3 py-3 text-sm font-black text-red-700"><i class="fa-solid fa-notes-medical mr-1"></i> 18</td>
+                                                    <td class="px-3 py-3 text-sm font-medium text-slate-700">João Paciente <br><span class="text-[10px] text-red-600 font-bold">Transferência Oriximiná</span></td>
+                                                    <td class="px-3 py-3 text-xs text-slate-500">999.888.777-66</td>
+                                                    <td class="px-3 py-3 text-xs font-bold text-slate-400">ADM</td>
+                                                    <td class="px-3 py-3 text-center admin-cam-only hidden"><span class="text-sm font-bold text-slate-700">R$ 0,00</span></td>
+                                                    <td class="px-3 py-3 text-right"><button class="text-red-600 font-bold text-xs btn-remover-cam" data-owner="ADM">Remover</button></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SESSÃO: ADMINISTRADOR ROOT (Dashboard) -->
+            <section id="panel_ADM" class="role-panel hidden w-full h-full bg-slate-50 overflow-y-auto">
+                <div class="max-w-7xl mx-auto p-6 space-y-6">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+                        <h2 class="text-2xl font-black text-slate-800"><i class="fa-solid fa-chess-king text-yellow-500 mr-2"></i>Dashboard Mestre</h2>
+                        <p class="text-sm font-bold text-slate-500 bg-white px-3 py-1 rounded shadow-sm border border-slate-100">Atualizado: Agora</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 border-l-4 border-l-green-500">
+                            <p class="text-xs font-bold text-slate-400 uppercase">Receita Cargas (Mês)</p>
+                            <h3 class="text-2xl font-black text-slate-800 mt-1">R$ 18.500,00</h3>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 border-l-4 border-l-indigo-500">
+                            <p class="text-xs font-bold text-slate-400 uppercase">Receita Camarotes (Mês)</p>
+                            <h3 class="text-2xl font-black text-slate-800 mt-1">R$ 4.250,00</h3>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 border-l-4 border-l-blue-500">
+                            <p class="text-xs font-bold text-slate-400 uppercase">Status do Pátio</p>
+                            <h3 class="text-2xl font-black text-slate-800 mt-1">12 <span class="text-sm font-medium text-slate-400">Veículos</span></h3>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 border-l-4 border-l-purple-500">
+                            <p class="text-xs font-bold text-slate-400 uppercase">Ocupação Camarotes</p>
+                            <h3 class="text-2xl font-black text-slate-800 mt-1">15/17 <span class="text-sm font-medium text-slate-400">Ocupados</span></h3>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100">
+                        <h2 class="text-md font-bold text-slate-700 mb-3"><i class="fa-solid fa-list-check text-slate-400 mr-2"></i>Últimas Movimentações Globais</h2>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-slate-200">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left text-xs font-bold text-slate-500">Data/Hora</th>
+                                        <th class="px-3 py-2 text-left text-xs font-bold text-slate-500">Setor</th>
+                                        <th class="px-3 py-2 text-left text-xs font-bold text-slate-500">Ação / Registro</th>
+                                        <th class="px-3 py-2 text-left text-xs font-bold text-slate-500">Operador</th>
+                                        <th class="px-3 py-2 text-right text-xs font-bold text-slate-500">Valor Auditado</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr>
+                                        <td class="px-3 py-2 text-xs text-slate-600">Hoje, 10:45</td>
+                                        <td class="px-3 py-2 text-xs font-bold text-indigo-600">CAMAROTES</td>
+                                        <td class="px-3 py-2 text-sm text-slate-700">Venda Bilhete - Camarote 05 (Maria Oliveira)</td>
+                                        <td class="px-3 py-2 text-xs font-bold text-slate-400">OCAM</td>
+                                        <td class="px-3 py-2 text-sm font-bold text-slate-800 text-right">R$ 250,00</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-3 py-2 text-xs text-slate-600">Hoje, 09:30</td>
+                                        <td class="px-3 py-2 text-xs font-bold text-blue-600">CARGAS</td>
+                                        <td class="px-3 py-2 text-sm text-slate-700">Registro Veículo - Hilux (QWA-9922)</td>
+                                        <td class="px-3 py-2 text-xs font-bold text-slate-400">OCARGA</td>
+                                        <td class="px-3 py-2 text-sm font-bold text-slate-800 text-right">R$ 1.500,00</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-3 py-2 text-xs text-slate-600">Hoje, 08:15</td>
+                                        <td class="px-3 py-2 text-xs font-bold text-red-600">CARGAS (DEL)</td>
+                                        <td class="px-3 py-2 text-sm text-slate-700 line-through">Remoção de Agendamento (MNT-1020)</td>
+                                        <td class="px-3 py-2 text-xs font-bold text-slate-400">ADM</td>
+                                        <td class="px-3 py-2 text-sm font-bold text-slate-800 text-right text-red-500">- R$ 1.000,00</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SCRIPTS DE ROTEAMENTO E LÓGICA             -->
+    <!-- ========================================== -->
+    <script>
+     // ==========================================
+// 1. DADOS SIMULADOS E VARIÁVEIS GLOBAIS
+// ==========================================
+const mockDatabase = {
+    'RH': { role: 'RH', desc: 'Recursos Humanos' },
+    'ADM': { role: 'ADM', desc: 'Administrador Geral' },
+    'GCARGA': { role: 'GCARGA', desc: 'Gerente de Cargas' },
+    'OCARGA': { role: 'OCARGA', desc: 'Operador de Cargas' },
+    'GCAM': { role: 'GCAM', desc: 'Gerente de Camarotes' },
+    'OCAM': { role: 'OCAM', desc: 'Operador de Camarotes' }
+};
+
+const loginScreen = document.getElementById('loginScreen');
+const mainApp = document.getElementById('mainApp');
+const loginError = document.getElementById('loginError');
+
+// ==========================================
+// 2. SISTEMA DE LOGIN, ROTEAMENTO E NAVEGAÇÃO
+// ==========================================
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const user = document.getElementById('usernameInput').value.trim().toUpperCase();
+    const pass = document.getElementById('passwordInput').value.trim();
+
+    if (pass === '123' && mockDatabase[user]) {
+        realizarLogin(mockDatabase[user]);
+    } else {
+        loginError.classList.remove('hidden');
+        loginError.classList.add('animate-pulse');
+        setTimeout(() => loginError.classList.remove('animate-pulse'), 500);
+    }
+});
+
+function realizarLogin(userData) {
+    loginError.classList.add('hidden');
+    loginScreen.classList.add('hidden');
+    
+    mainApp.classList.remove('hidden');
+    mainApp.style.display = 'flex'; 
+    document.getElementById('displayUserRole').textContent = userData.desc;
+
+    // Oculta todos os painéis globais
+    document.querySelectorAll('.role-panel').forEach(panel => panel.classList.add('hidden'));
+    
+    const role = userData.role;
+    const navAdmin = document.getElementById('nav_ADM');
+
+    // --- ROTEAMENTO: ADM MESTRE ---
+    if (role === 'ADM') {
+        if(navAdmin) navAdmin.classList.remove('hidden');
+        document.getElementById('panel_ADM').classList.remove('hidden');
+    } else {
+        if(navAdmin) navAdmin.classList.add('hidden');
+    }
+
+    // --- ROTEAMENTO E SEGURANÇA: CARGAS ---
+    if (role === 'ADM' || role === 'GCARGA' || role === 'OCARGA') {
+        if (role !== 'ADM') document.getElementById('panel_CARGAS').classList.remove('hidden');
+        
+        const canSeeValues = (role === 'ADM' || role === 'GCARGA');
+        document.querySelectorAll('.admin-cargo-only').forEach(el => {
+            if (canSeeValues) {
+                el.classList.remove('hidden');
+                if(el.tagName === 'TH' || el.tagName === 'TD') el.style.display = 'table-cell';
+                else el.style.display = 'block';
+            } else {
+                el.classList.add('hidden');
+                el.style.display = 'none';
+            }
+        });
+
+        document.querySelectorAll('.btn-remover').forEach(btn => {
+            const donoDoRegistro = btn.getAttribute('data-owner');
+            if (role === 'ADM' || donoDoRegistro === role) {
+                btn.disabled = false;
+                btn.className = "text-red-600 font-bold text-xs hover:text-red-800 transition btn-remover cursor-pointer";
+                btn.textContent = "Remover";
+            } else {
+                btn.disabled = true;
+                btn.className = "text-slate-300 font-bold text-xs cursor-not-allowed btn-remover";
+                btn.textContent = "Bloqueado";
+            }
+        });
+    }
+
+    // --- ROTEAMENTO E SEGURANÇA: CAMAROTES ---
+    if (role === 'ADM' || role === 'GCAM' || role === 'OCAM') {
+        if (role !== 'ADM') document.getElementById('panel_CAMAROTES').classList.remove('hidden');
+        
+        const canSeeValuesCam = (role === 'ADM' || role === 'GCAM');
+        document.querySelectorAll('.admin-cam-only').forEach(el => {
+            if (canSeeValuesCam) {
+                el.classList.remove('hidden');
+                if(el.tagName === 'TH' || el.tagName === 'TD') el.style.display = 'table-cell';
+                else el.style.display = 'block';
+            } else {
+                el.classList.add('hidden');
+                el.style.display = 'none';
+            }
+        });
+
+        document.querySelectorAll('.btn-remover-cam').forEach(btn => {
+            const donoDoRegistro = btn.getAttribute('data-owner');
+            if (role === 'ADM' || donoDoRegistro === role) {
+                btn.disabled = false;
+                btn.className = "text-red-600 font-bold text-xs hover:text-red-800 transition btn-remover-cam cursor-pointer";
+                btn.textContent = "Remover";
+            } else {
+                btn.disabled = true;
+                btn.className = "text-slate-300 font-bold text-xs cursor-not-allowed btn-remover-cam";
+                btn.textContent = "Bloqueado";
+            }
+        });
+    }
+
+    // --- ROTEAMENTO: RH ---
+    if (role === 'RH') {
+        document.getElementById('panel_RH').classList.remove('hidden');
+    }
+}
+
+// Navegação Exclusiva do Administrador
+function abrirModulo(modulo) {
+    document.querySelectorAll('.role-panel').forEach(panel => panel.classList.add('hidden'));
+    
+    const painel = document.getElementById(`panel_${modulo}`);
+    if(painel) painel.classList.remove('hidden');
+
+    const botoes = document.querySelectorAll('.btn-nav-adm');
+    botoes.forEach(btn => {
+        if(btn.innerText.toUpperCase().includes(modulo) || (modulo === 'ADM' && btn.innerText.includes('Visão Geral'))) {
+            btn.className = "btn-nav-adm px-5 py-2 bg-yellow-500 text-yellow-900 text-sm font-bold rounded hover:bg-yellow-400 transition shadow-sm";
+        } else {
+            btn.className = "btn-nav-adm px-5 py-2 bg-slate-700 text-white text-sm font-bold rounded hover:bg-slate-600 transition";
+        }
+    });
+}
+
+function logout() {
+    document.getElementById('usernameInput').value = '';
+    document.getElementById('passwordInput').value = '';
+    
+    mainApp.style.display = 'none';
+    mainApp.classList.add('hidden');
+    loginScreen.classList.remove('hidden');
+
+    document.querySelectorAll('.role-panel').forEach(panel => panel.classList.add('hidden'));
+    const navAdmin = document.getElementById('nav_ADM');
+    if(navAdmin) navAdmin.classList.add('hidden');
+}
+
+// ==========================================
+// 3. LÓGICA DO SETOR DE RH
+// ==========================================
+function gerarMatricula() {
+    const ano = new Date().getFullYear();
+    const numeroAleatorio = Math.floor(1000 + Math.random() * 9000); 
+    return `MAT-${ano}-${numeroAleatorio}`;
+}
+
+function switchRHTab(tabName) {
+    const tabs = ['dashboard', 'cadastro']; 
+    
+    tabs.forEach(tab => {
+        const panel = document.getElementById(`tab_rh_${tab}`);
+        const btn = document.getElementById(`btn_rh_${tab}`);
+        
+        if(!panel || !btn) return;
+
+        if (tab === tabName) {
+            panel.classList.remove('hidden');
+            panel.classList.add('block');
+            btn.className = "w-full flex items-center gap-3 px-4 py-3 bg-purple-50 text-purple-700 rounded-lg font-bold text-sm transition";
+            
+            if(tab === 'cadastro') {
+                const inputMatricula = document.getElementById('idMatriculaGerada');
+                if(inputMatricula) inputMatricula.value = gerarMatricula();
+            }
+        } else {
+            panel.classList.add('hidden');
+            panel.classList.remove('block');
+            btn.className = "w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 rounded-lg font-bold text-sm transition";
+        }
+    });
+}
+
+// ==========================================
+// 4. LÓGICA DO SETOR DE CARGAS
+// ==========================================
+let isPatioLotado = false;
+const btnPatio = document.getElementById('btnPatio');
+
+if(btnPatio) {
+    btnPatio.addEventListener('click', () => {
+        isPatioLotado = !isPatioLotado;
+        if (isPatioLotado) {
+            btnPatio.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-1"></i> Pátio Lotado (Esvaziar)';
+            btnPatio.className = 'admin-cargo-only px-4 py-2 rounded-lg font-bold text-sm transition shadow-sm bg-red-100 text-red-700 border border-red-300 hover:bg-red-200';
+        } else {
+            btnPatio.innerHTML = '<i class="fa-solid fa-check-circle mr-1"></i> Pátio Vazio (Lotar)';
+            btnPatio.className = 'admin-cargo-only px-4 py-2 rounded-lg font-bold text-sm transition shadow-sm bg-green-100 text-green-700 border border-green-300 hover:bg-green-200';
+        }
+    });
+}
+
+const inputDataCarga = document.getElementById('inputDataCarga');
+const rotaAutomatica = document.getElementById('rotaAutomatica');
+
+if(inputDataCarga) {
+    inputDataCarga.addEventListener('change', function() {
+        if (!this.value) {
+            rotaAutomatica.textContent = '';
+            return;
+        }
+        
+        const parts = this.value.split('-');
+        const dataSelecionada = new Date(parts[0], parts[1] - 1, parts[2]);
+        const diaDaSemana = dataSelecionada.getDay(); 
+
+        if (diaDaSemana === 1 || diaDaSemana === 3) {
+            rotaAutomatica.innerHTML = '<i class="fa-solid fa-arrow-right"></i> Rota detectada: Oriximiná ➔ Santarém';
+            rotaAutomatica.className = 'text-[11px] font-bold mt-1 text-blue-600 min-h-[16px]';
+        } else if (diaDaSemana === 2 || diaDaSemana === 4) {
+            rotaAutomatica.innerHTML = '<i class="fa-solid fa-arrow-left"></i> Rota detectada: Santarém ➔ Oriximiná';
+            rotaAutomatica.className = 'text-[11px] font-bold mt-1 text-green-600 min-h-[16px]';
+        } else {
+            alert("⚠️ DATA INDISPONÍVEL!\n\nAs viagens ocorrem apenas de Segunda a Quinta-feira.");
+            this.value = ''; 
+            rotaAutomatica.textContent = 'Dia inválido selecionado.';
+            rotaAutomatica.className = 'text-[11px] font-bold mt-1 text-red-600 min-h-[16px]';
+        }
+    });
+}
+
+const phoneContainer = document.getElementById('phoneContainer');
+const btnAddPhone = document.getElementById('btnAddPhone');
+let phoneCount = 1;
+
+if(btnAddPhone) {
+    btnAddPhone.addEventListener('click', () => {
+        if (phoneCount < 3) {
+            const div = document.createElement('div');
+            div.className = 'flex items-center space-x-2 mt-2';
+            div.innerHTML = `
+                <input type="tel" placeholder="(00) 00000-0000" class="block w-full rounded-md border-slate-300 p-2 border text-sm outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                <button type="button" class="text-red-500 hover:text-red-700 text-lg btn-del-phone"><i class="fa-solid fa-trash-can"></i></button>
+            `;
+            phoneContainer.appendChild(div);
+            phoneCount++;
+            if (phoneCount === 3) btnAddPhone.style.display = 'none';
+
+            div.querySelector('.btn-del-phone').addEventListener('click', function() {
+                div.remove();
+                phoneCount--;
+                btnAddPhone.style.display = 'inline-block';
+            });
+        }
+    });
+}
+
+function filtrarTabelaCargas(dataBuscaBR, textoBusca) {
+    const linhas = document.querySelectorAll('.linha-carga');
+    textoBusca = textoBusca.toLowerCase();
+
+    linhas.forEach(linha => {
+        const dataLinha = linha.querySelector('.celula-data').textContent.trim();
+        const textosLinha = linha.querySelector('.celula-texto').textContent.toLowerCase() + linha.innerHTML.toLowerCase();
+
+        const passaData = dataBuscaBR ? (dataLinha === dataBuscaBR) : true;
+        const passaTexto = textoBusca ? textosLinha.includes(textoBusca) : true;
+
+        linha.style.display = (passaData && passaTexto) ? '' : 'none';
+    });
+}
+
+const btnVerHojeCarga = document.getElementById('btnVerHojeCarga');
+if(btnVerHojeCarga) {
+    btnVerHojeCarga.addEventListener('click', () => {
+        const hojeBR = new Date().toLocaleDateString('pt-BR');
+        document.getElementById('buscaDataCarga').value = '';
+        document.getElementById('buscaTextoCarga').value = '';
+        filtrarTabelaCargas(hojeBR, '');
+    });
+}
+
+const btnBuscarCarga = document.getElementById('btnBuscarCarga');
+if(btnBuscarCarga) {
+    btnBuscarCarga.addEventListener('click', () => {
+        const texto = document.getElementById('buscaTextoCarga').value.trim();
+        const dataInput = document.getElementById('buscaDataCarga').value;
+        let dataBR = '';
+        
+        if (dataInput) {
+            const p = dataInput.split('-');
+            dataBR = `${p[2]}/${p[1]}/${p[0]}`;
+        }
+        filtrarTabelaCargas(dataBR, texto);
+    });
+}
+
+const btnLimparCarga = document.getElementById('btnLimparCarga');
+if(btnLimparCarga) {
+    btnLimparCarga.addEventListener('click', () => {
+        document.getElementById('buscaDataCarga').value = '';
+        document.getElementById('buscaTextoCarga').value = '';
+        filtrarTabelaCargas('', '');
+    });
+}
+
+// ==========================================
+// 5. LÓGICA DO SETOR DE CAMAROTES
+// ==========================================
+const inputDataCamarote = document.getElementById('inputDataCamarote');
+const rotaAutomaticaCamarote = document.getElementById('rotaAutomaticaCamarote');
+const overlayMapa = document.getElementById('overlayMapaCamarote');
+const mapaGrid = document.getElementById('mapaCamarotesGrid');
+const inputNumCamarote = document.getElementById('inputNumCamarote');
+const blocoEnfermaria = document.getElementById('blocoEnfermaria');
+const motivoMedico = document.getElementById('motivoMedico');
+
+function renderizarMapaCamarotes() {
+    if(!mapaGrid) return;
+    mapaGrid.innerHTML = '';
+    
+    for (let i = 1; i <= 18; i++) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        
+        if (i === 18) {
+            btn.className = "p-3 rounded-lg border-2 border-red-300 bg-red-50 text-red-700 font-bold text-sm hover:bg-red-100 transition flex flex-col items-center justify-center gap-1 shadow-sm h-20";
+            btn.innerHTML = `<i class="fa-solid fa-briefcase-medical text-xl"></i><span>Enfermaria</span>`;
+        } else {
+            btn.className = "p-3 rounded-lg border border-slate-200 bg-white text-slate-700 font-bold text-lg hover:border-indigo-400 hover:bg-indigo-50 transition flex flex-col items-center justify-center shadow-sm h-20";
+            btn.innerHTML = `<span class="text-xs text-slate-400 font-normal">Nº</span>${i.toString().padStart(2, '0')}`;
+        }
+
+        btn.addEventListener('click', () => {
+            selecionarCamarote(i, btn);
+        });
+        mapaGrid.appendChild(btn);
+    }
+}
+
+function selecionarCamarote(numero, botaoElement) {
+    Array.from(mapaGrid.children).forEach(b => {
+        if(b.innerText.includes('Enfermaria')) {
+            b.classList.remove('bg-red-600', 'text-white');
+            b.classList.add('bg-red-50', 'text-red-700');
+        } else {
+            b.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600');
+            b.classList.add('bg-white', 'text-slate-700');
+        }
+    });
+
+    if(inputNumCamarote) inputNumCamarote.value = numero.toString().padStart(2, '0');
+
+    if (numero === 18) {
+        alert("⚠️ ATENÇÃO: O Camarote 18 é restrito para uso médico/enfermaria.\nNão o venda para passageiros comuns.");
+        botaoElement.classList.remove('bg-red-50', 'text-red-700');
+        botaoElement.classList.add('bg-red-600', 'text-white');
+        
+        if(blocoEnfermaria) blocoEnfermaria.classList.remove('hidden');
+        if(motivoMedico) motivoMedico.setAttribute('required', 'true');
+    } else {
+        botaoElement.classList.remove('bg-white', 'text-slate-700');
+        botaoElement.classList.add('bg-indigo-600', 'text-white', 'border-indigo-600');
+        
+        if(blocoEnfermaria) blocoEnfermaria.classList.add('hidden');
+        if(motivoMedico) motivoMedico.removeAttribute('required');
+    }
+}
+
+if(inputDataCamarote) {
+    inputDataCamarote.addEventListener('change', function() {
+        if (!this.value) {
+            if(rotaAutomaticaCamarote) rotaAutomaticaCamarote.textContent = '';
+            if(overlayMapa) overlayMapa.classList.remove('hidden');
+            return;
+        }
+        
+        const parts = this.value.split('-');
+        const dataSelecionada = new Date(parts[0], parts[1] - 1, parts[2]);
+        const diaDaSemana = dataSelecionada.getDay(); 
+
+        if (diaDaSemana === 1 || diaDaSemana === 3) {
+            if(rotaAutomaticaCamarote) {
+                rotaAutomaticaCamarote.innerHTML = '<i class="fa-solid fa-arrow-right"></i> Rota: Oriximiná ➔ Santarém';
+                rotaAutomaticaCamarote.className = 'text-[11px] font-bold mt-1 text-indigo-600 min-h-[16px]';
+            }
+            if(overlayMapa) overlayMapa.classList.add('hidden'); 
+            renderizarMapaCamarotes(); 
+        } else if (diaDaSemana === 2 || diaDaSemana === 4) {
+            if(rotaAutomaticaCamarote) {
+                rotaAutomaticaCamarote.innerHTML = '<i class="fa-solid fa-arrow-left"></i> Rota: Santarém ➔ Oriximiná';
+                rotaAutomaticaCamarote.className = 'text-[11px] font-bold mt-1 text-emerald-600 min-h-[16px]';
+            }
+            if(overlayMapa) overlayMapa.classList.add('hidden');
+            renderizarMapaCamarotes();
+        } else {
+            alert("⚠️ DATA INDISPONÍVEL!\n\nAs viagens ocorrem apenas de Segunda a Quinta-feira.");
+            this.value = ''; 
+            if(rotaAutomaticaCamarote) {
+                rotaAutomaticaCamarote.textContent = 'Dia inválido selecionado.';
+                rotaAutomaticaCamarote.className = 'text-[11px] font-bold mt-1 text-red-600 min-h-[16px]';
+            }
+            if(overlayMapa) overlayMapa.classList.remove('hidden'); 
+        }
+    });
+}
+    </script>
+</body>
+</html>
